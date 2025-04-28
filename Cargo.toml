@@ -6,6 +6,48 @@ edition = "2024"
 [lib]
 
 [dependencies]
+abort-on-drop = "0.2.2"
+futures = "0.3.31"
+postcard = { version = "1.1.1", default-features = false, features = ["use-std"] }
+serde = { version = "1.0.204", features = ["derive", "rc"] }
+thiserror = "2.0.12"
+tokio = { version = "1.38.1", features = ["full"] }
+tokio-stream = { version = "0.1.15", features = ["full"] }
+tokio-util = { version = "0.7.11", features = ["full"] }
+tracing = "0.1.40"
+type_traits = "0.3.0"
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.18", features = [ "default", "json", "env-filter", "fmt" ] }
+
+[lints.rust]
+missing_docs = "warn"
+impl-trait-overcaptures = "deny"
+
+[lints.clippy]
+arithmetic_side_effects = "warn"
+assigning_clones = "warn"
+branches_sharing_code = "warn"
+cast_lossless = "warn"
+cast_possible_wrap = "warn"
+infinite_iter = "warn"
+infinite_loop = "warn"
+manual_string_new = "warn"
+missing_const_for_fn = "warn"
+missing_panics_doc = "warn"
+missing_safety_doc = "warn"
+needless_bitwise_bool = "warn"
+needless_collect = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+needless_pass_by_ref_mut = "warn"
+needless_pass_by_value = "warn"
+redundant_clone = "warn"
+semicolon_if_nothing_returned = "warn"
+significant_drop_in_scrutinee = "warn"
+unnecessary_wraps = "warn"
+use_self = "warn"
+allow_attributes = "warn"
 
 [features]
 default = []
