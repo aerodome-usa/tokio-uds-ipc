@@ -1,0 +1,27 @@
+name: Nix-based Rust CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-nix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+    - name: Cache dependencies closure
+      uses: actions/cache@v4
+      with:
+        path: nix-store
+        key: ${{ runner.os }}-deps-${{ hashFiles('Cargo.toml','Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-deps
+    - run: nix flake check -L --extra-substituters file://$PWD/nix-store?trusted=true
+    - name: Save store to cache
+      run: |
+        sudo rm -rf nix-store || true
+        mkdir -p nix-store
+        nix copy --to "file://$PWD/nix-store?compression=zstd" .#dependencies

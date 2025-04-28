@@ -1,0 +1,18 @@
+on: pull_request
+
+name: Block Fixup Commits
+
+jobs:
+  message-check:
+    name: Block Fixup Commits
+
+    permissions:
+      pull-requests: read
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Block Fixup Commits
+        uses: lierdakil/block-fixup-merge-action@main
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
