@@ -7,8 +7,61 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-nix:
+  get-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      check-matrix: ${{ steps.set-check-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+
+    - id: set-check-matrix
+      run: echo "matrix=$(nix eval --json .#check-matrix.x86_64-linux)" >> $GITHUB_OUTPUT
+
+  build-deps:
+    runs-on: ubuntu-latest
+    outputs:
+      check-matrix: ${{ steps.set-check-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+    - name: Cache dependencies closure
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: nix-store
+        key: ${{ runner.os }}-deps-${{ hashFiles('Cargo.toml','Cargo.lock','*.nix','flake.lock') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-deps
+
+    - name: Build Rust dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        nix build --no-link -L .#dependencies \
+          --extra-substituters file://$PWD/nix-store?trusted=true
+    - name: Save store to cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        sudo rm -rf nix-store || true
+        mkdir -p nix-store
+        scripts/nix-cache.sh $PWD/nix-store .#dependencies
+
+  flake-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+
+    - run: nix flake check -L --no-build
+
+  check:
+    needs: [get-matrix, build-deps]
+    runs-on: ubuntu-latest
+    name: check ${{ matrix.check }}
+    strategy:
+      fail-fast: false
+      # this matrix consists of the names of all checks defined in flake.nix
+      matrix: ${{fromJson(needs.get-matrix.outputs.check-matrix)}}
     steps:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v27
@@ -16,12 +69,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: nix-store
-        key: ${{ runner.os }}-deps-${{ hashFiles('Cargo.toml','Cargo.lock') }}
+        key: ${{ runner.os }}-deps-${{ hashFiles('Cargo.toml','Cargo.lock','*.nix','flake.lock') }}-v2
         restore-keys: |
           ${{ runner.os }}-deps
-    - run: nix flake check -L --extra-substituters file://$PWD/nix-store?trusted=true
-    - name: Save store to cache
-      run: |
-        sudo rm -rf nix-store || true
-        mkdir -p nix-store
-        nix copy --to "file://$PWD/nix-store?compression=zstd" .#dependencies
+    - run: |
+        nix build -L --no-link .#checks.x86_64-linux.${{ matrix.check }} \
+          --extra-substituters file://$PWD/nix-store?trusted=true

@@ -31,7 +31,7 @@ let
     inherit cargoArtifacts;
   };
 in
-craneLib.buildPackage (commonArgs)
+craneLib.buildPackage commonArgs
 // {
   inherit craneLib;
 }
