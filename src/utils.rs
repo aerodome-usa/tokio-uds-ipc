@@ -29,3 +29,34 @@ where
         }
     }
 }
+
+macro_rules! sink_via_unpin {
+    ($field:tt) => {
+        fn poll_ready(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            self.$field.poll_ready_unpin(cx)
+        }
+
+        fn start_send(mut self: Pin<&mut Self>, item: Request) -> Result<(), Self::Error> {
+            self.$field.start_send_unpin(item)
+        }
+
+        fn poll_flush(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            self.$field.poll_flush_unpin(cx)
+        }
+
+        fn poll_close(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+        ) -> Poll<Result<(), Self::Error>> {
+            self.$field.poll_close_unpin(cx)
+        }
+    };
+}
+
+pub(crate) use sink_via_unpin;
