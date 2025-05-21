@@ -11,7 +11,7 @@ use tokio_util::codec::Framed;
 
 use crate::comm::{CodecError, PostcardCodec};
 
-pub use self::robust::{RobustClient, SplitSinkOwned, SplitStreamOwned};
+pub use self::robust::{RobustClient, borrowed, owned};
 
 /// Generic unix domain socket client. Takes a `Request` and `Response` types.
 /// The former is something sent to the server, the latter is what the server
