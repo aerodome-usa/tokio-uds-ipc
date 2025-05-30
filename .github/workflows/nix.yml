@@ -75,3 +75,13 @@ jobs:
     - run: |
         nix build -L --no-link .#checks.x86_64-linux.${{ matrix.check }} \
           --extra-substituters file://$PWD/nix-store?trusted=true
+
+  required:
+    needs:
+    - check
+    - flake-check
+    runs-on: ubuntu-latest
+    name: Faux required check
+    steps:
+    - run: |
+        true
