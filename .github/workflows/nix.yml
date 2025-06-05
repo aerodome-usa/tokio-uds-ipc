@@ -82,6 +82,14 @@ jobs:
     - flake-check
     runs-on: ubuntu-latest
     name: Faux required check
+    if: always()
     steps:
-    - run: |
-        true
+      - name: Fail if any dependency failed or was skipped
+        run: |
+          all_ok=$(jq 'all(.[]; .result == "success")' <<'EOF'
+          ${{ toJson(needs) }}
+          EOF
+          )
+          if [ "$all_ok" != "true" ]; then
+            exit 1
+          fi
